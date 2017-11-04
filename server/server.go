@@ -165,8 +165,12 @@ func checkCache(minutes int) {
 				uf.mu.Lock()
 			}
 
-			debug(3, "Removing file: %s\n", f.Name())
-			os.Remove(f.Name())
+			name := cache_path + f.Name()
+			debug(3, "Removing file: %s\n", name)
+			err := os.Remove(name)
+			if err != nil {
+				debug(0, "Unable to remove cache file \"%s\": %s\n", name, err)
+			}
 
 			if ok {
 				uf.mu.Unlock()
