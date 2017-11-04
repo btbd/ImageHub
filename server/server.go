@@ -265,8 +265,9 @@ func getNamespaceRepos(wait *sync.WaitGroup, url string, repos *[]NamespaceRepos
 
 func addLog(r *http.Request) {
 	log_mu.Lock()
+	defer log_mu.Unlock()
 	
-	log := time.Now().Format(time.RFC3339) + " " + r.RemoteAddr + " " + r.URL.Path[1:] + " " + r.URL.RawQuery + "\n"
+	log := time.Now().Format(time.RFC3339) + " " + r.RemoteAddr + " " + r.URL.Path[1:] + "?" + r.URL.RawQuery + "\n"
 	
 	f, err := os.OpenFile("imagehub.log", os.O_APPEND | os.O_WRONLY, 0600)
 	if err != nil {
@@ -281,8 +282,6 @@ func addLog(r *http.Request) {
 			debug(0, "  Unable to append to log file: %s\n", err)
 		}
 	}
-		
-	log_mu.Unlock()
 }
 
 func main() {
