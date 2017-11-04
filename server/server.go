@@ -50,7 +50,7 @@ type FileMu struct {
 	mu    *sync.RWMutex
 }
 
-var cache_path = "." + string(os.PathSeparator)
+var cache_path = "." + string(os.PathSeparator) + "cache" + string(os.PathSeparator)
 var expire = 60
 var used_files map[string]*FileMu = map[string]*FileMu{}
 var used_files_mu sync.Mutex
@@ -265,7 +265,7 @@ func getNamespaceRepos(wait *sync.WaitGroup, url string, repos *[]NamespaceRepos
 func main() {
 	usage := flag.Usage
 	flag.Usage = func() {
-		fmt.Println("The Container Search server for finding container images.")
+		fmt.Println("The ImageHub server for finding container images.")
 		usage()
 	}
 
@@ -559,5 +559,7 @@ func main() {
 
 	debug(0, "Listening on port %d\n", port)
 
-	http.ListenAndServe(":"+strconv.Itoa(port), nil)
+	if err := http.ListenAndServe(":"+strconv.Itoa(port), nil); err != nil {
+		fmt.Printf("Error listening on port %d: %s\n", port, err)
+	}
 }
