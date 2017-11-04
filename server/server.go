@@ -56,7 +56,7 @@ var log_mu sync.Mutex
 var used_files map[string]*FileMu = map[string]*FileMu{}
 var used_files_mu sync.Mutex
 var verbose = 1
-var web = "web"
+var web_path = "web"
 
 var https = &http.Client{Transport: &http.Transport{
 	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -303,28 +303,30 @@ func main() {
 	}
 
 	flag.IntVar(&expire, "expire", expire, "time (mins) items live in the cache")
-	flag.StringVar(&cache_path, "path", cache_path, "dir path to the cache")
+	flag.StringVar(&cache_path, "path", cache_path, "dir path for the cache")
 	flag.IntVar(&port, "port", port, "port number for the server to listen on")
 	flag.IntVar(&verbose, "v", verbose, "verbose/debug level")
-	flag.StringVar(&web, "web", web, "web directory")
+	flag.StringVar(&web_path, "web", web_path, "web dir")
 	flag.Parse()
 
 	if len(cache_path) == 0 {
 		cache_path = "."
 	}
 	
-	fi, err := os.Stat(web)
+	if len(web_path) == 0 {
+		web_path = "."
+	}
+	
+	fi, err := os.Stat(web_path)
 	if (err != nil) {
-		fmt.Printf("Unable to get info for web directory: \"%s\"\n", web)
+		fmt.Printf("Unable to get info for web directory: \"%s\"\n", web_path)
 		os.Exit(1)
 	}
 	
 	if !fi.Mode().IsDir() {
-		fmt.Printf("Web directory is not a directory: \"%s\"\n", web)
+		fmt.Printf("Web directory is not a directory: \"%s\"\n", web_path)
 		os.Exit(1)
 	}
-	
-	web = "." + string(os.PathSeparator) + web + string(os.PathSeparator)
 
 	if os.MkdirAll(cache_path, 0755) != nil {
 		fmt.Printf("Unable to create directory: \"%s\"\n", cache_path)
@@ -334,6 +336,11 @@ func main() {
 	if cache_path[len(cache_path)-1] != os.PathSeparator {
 		cache_path += string(os.PathSeparator)
 	}
+	
+	if web_path[len(web_path)-1] != os.PathSeparator {
+		web_path += string(os.PathSeparator)
+	}
+	
 	go checkCache(expire)
 
 	// Handles file requests
@@ -342,11 +349,11 @@ func main() {
 		
 		addLog(r)
 
-		bytes, err := ioutil.ReadFile(web + r.URL.Path[1:])
+		bytes, err := ioutil.ReadFile(web_path + r.URL.Path[1:])
 		if err == nil {
 			w.Write(bytes)
 		} else {
-			bytes, err := ioutil.ReadFile(web + "index.html")
+			bytes, err := ioutil.ReadFile(web_path + "index.html")
 			if err == nil {
 				w.Write(bytes)
 			} else {
