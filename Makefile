@@ -1,3 +1,13 @@
+all: binary
+
+binary: bin/server
+
+bin/server: server/server.go
+	mkdir -p bin
+	go build -tags netgo -installsuffix netgo -o $@ $<
+
 start:
-	go build -o ./bin/server.exe server/server.go
-	./bin/server.exe
+	bin/server
+    
+clean:
+	rm -rf bin
