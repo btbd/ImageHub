@@ -52,6 +52,7 @@ type FileMu struct {
 
 var cache_path = "." + string(os.PathSeparator) + "cache" + string(os.PathSeparator)
 var expire = 60
+var log_mu sync.Mutex
 var used_files map[string]*FileMu = map[string]*FileMu{}
 var used_files_mu sync.Mutex
 var verbose = 1
@@ -262,6 +263,28 @@ func getNamespaceRepos(wait *sync.WaitGroup, url string, repos *[]NamespaceRepos
 	wait.Done()
 }
 
+func addLog(r *http.Request) {
+	log_mu.Lock()
+	
+	log := time.Now().Format(time.RFC3339) + " " + r.RemoteAddr + " " + r.URL.Path[1:] + " " + r.URL.RawQuery + "\n"
+	
+	f, err := os.OpenFile("imagehub.log", os.O_APPEND | os.O_WRONLY, 0600)
+	if err != nil {
+		if err := ioutil.WriteFile("imagehub.log", []byte(log), 0644); err != nil {
+			debug(0, "Unable to create log file: %s\n", err)
+			os.Exit(1)
+		}
+	} else {
+		defer f.Close()
+		
+		if _, err = f.WriteString(log); err != nil {
+			debug(0, "  Unable to append to log file: %s\n", err)
+		}
+	}
+		
+	log_mu.Unlock()
+}
+
 func main() {
 	usage := flag.Usage
 	flag.Usage = func() {
@@ -313,6 +336,8 @@ func main() {
 	// Handles file requests
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
+		
+		addLog(r)
 
 		bytes, err := ioutil.ReadFile(web + r.URL.Path[1:])
 		if err == nil {
@@ -330,6 +355,8 @@ func main() {
 	// Handles search requests
 	http.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
+		
+		addLog(r)
 
 		w.Header().Set("Content-Type", "application/json")
 
