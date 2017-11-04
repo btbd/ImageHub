@@ -300,7 +300,7 @@
 	
 	function ready() {
 		$("#table_holder").css({ "margin-top": $("#options").outerHeight() + 10 });
-		$("#results_holder").css({ "overflow-y": "scroll", height: $(window).height() - ($("#headers").offset().top + $("#headers").outerHeight() + 20) });
+		$("#results_holder").css({ "overflow-y": "scroll", height: $(window).height() - ($("#headers").offset().top + $("#headers").outerHeight() + 30) });
 		$("#table_holder_margin").css({ "padding-right": getScrollBarWidth() });
 	}
 
