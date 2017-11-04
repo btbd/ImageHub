@@ -299,8 +299,9 @@
 	$(e_search).click(search);
 	
 	function ready() {
-		$("#table_holder").css({ "margin-top": $("#options").outerHeight() + 10 });
-		$("#results_holder").css({ "overflow-y": "scroll", height: $(window).height() - ($("#headers").offset().top + $("#headers").outerHeight() + 30) });
+		$("#github").css("display", "");
+		$("#table_holder").css({ "margin-top": $("#options").outerHeight() + 10, display: "" });
+		$("#results_holder").css({ "overflow-y": "scroll", height: $(window).height() - ($("#headers").offset().top + $("#headers").outerHeight() + 40) });
 		$("#table_holder_margin").css({ "padding-right": getScrollBarWidth() });
 	}
 

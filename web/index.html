@@ -19,7 +19,7 @@
 			}
 			
 			#table_holder {
-				margin: 0px 20px 0px 20px;
+				margin: 0px 10px 0px 10px;
 			}
 			
 			table {
@@ -130,8 +130,7 @@
 	</head>
 	<body>
 		<div id="options">
-			<div style="margin: 0px 40px 0px 25px;">
-				<a href="https://github.com/btbd/ImageHub"><img src="logo.png" alt="Logo" width="26px" height="26px" style="position: absolute; left: 0; top: 0;"></a>
+			<div style="margin: 0px 25px 0px 13px;">
 				Namespace
 				<div style="display: inline-block; vertical-align: top;">
 					<div style="display: inline-block;">
@@ -151,13 +150,14 @@
 				<button id="search" tabindex="3">Search</button>
 				
 				<div style="display: inline-block; float: right;">
-					<div id="results_count">Results: 0</div><br>
+					<div id="results_count">Results: 0</div>
+					<br>
 					<div id="progress" style="opacity: 0;">Progress: 0.00%</div>
 				</div>
 			</div>
 		</div>
 
-		<div id="table_holder">
+		<div id="table_holder" style="display: none;">
 			<div id="table_holder_margin">
 				<table style="width: 100%;" id="headers">
 					<tr>
@@ -178,7 +178,9 @@
 		</div>
 		
 		<div id="description"></div>
-		<div style="width: 100%; text-align: center;"><a href="https://github.com/btbd/ImageHub">github</a></div>
+		<div id="github" style="position: absolute; right: 5px; display: none;">
+			<a href="https://github.com/btbd/ImageHub">github<img src="logo.png" alt="Logo" width="32px" height="32px" style="vertical-align: bottom;"></a>
+		</div>
 	</body>
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
