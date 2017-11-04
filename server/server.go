@@ -300,7 +300,7 @@ func main() {
 	
 	web = "." + string(os.PathSeparator) + web + string(os.PathSeparator)
 
-	if os.MkdirAll(cache_path, 0644) != nil {
+	if os.MkdirAll(cache_path, 0755) != nil {
 		fmt.Printf("Unable to create directory: \"%s\"\n", cache_path)
 		os.Exit(1)
 	}
