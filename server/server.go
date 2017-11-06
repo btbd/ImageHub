@@ -46,8 +46,13 @@ type QueryRepository struct {
 
 // Used to safely handle cache files
 type FileMu struct {
-	count int
-	mu    *sync.RWMutex
+	Count int
+	Mu    *sync.RWMutex
+}
+
+type ArchInfo struct {
+	Arch []string `json:"arch"`
+	Os   []string `json:"os"`
 }
 
 var cache_path = "." + string(os.PathSeparator) + "cache" + string(os.PathSeparator)
@@ -69,11 +74,10 @@ func debug(v int, format string, args ...interface{}) {
 	fmt.Printf(format, args...)
 }
 
-func cacheGet(url string) []byte {
-	debug(3, "Get URL: %s\n", url)
-
+func cacheGet(req *http.Request) []byte {
+	debug(3, "Get URL: %s\n", req.URL.String())
 	h := sha256.New()
-	h.Write([]byte(url))
+	h.Write([]byte(req.URL.String()))
 	name := fmt.Sprintf("%x", h.Sum(nil))
 	cache_file := cache_path + name
 
@@ -90,28 +94,28 @@ func cacheGet(url string) []byte {
 	uf, ok := used_files[name]
 	if !ok {
 		uf = &FileMu{
-			count: 1,
-			mu:    &sync.RWMutex{},
+			Count: 1,
+			Mu:    &sync.RWMutex{},
 		}
 		used_files[name] = uf
 	} else {
-		uf.count++
+		uf.Count++
 	}
 
 	used_files_mu.Unlock()
 
-	uf.mu.RLock() // Read-lock
+	uf.Mu.RLock() // Read-lock
 	bytes, err := ioutil.ReadFile(cache_file)
-	uf.mu.RUnlock()
+	uf.Mu.RUnlock()
 
 	if err != nil {
-		uf.mu.Lock()
+		uf.Mu.Lock()
 
 		// Re-check file existence
 		bytes, err = ioutil.ReadFile(cache_file)
 
 		if err != nil {
-			if resp, err := https.Get(url); err == nil {
+			if resp, err := https.Do(req); err == nil {
 				if bytes, err = ioutil.ReadAll(resp.Body); err == nil {
 					debug(3, "  Writing to cache file: %s\n", cache_file)
 					err = ioutil.WriteFile(cache_file, bytes, 0644)
@@ -126,19 +130,39 @@ func cacheGet(url string) []byte {
 				debug(1, "  Error on GET: %s\n", err)
 			}
 		}
-		uf.mu.Unlock()
+		uf.Mu.Unlock()
 	}
 
 	used_files_mu.Lock()
 	if uf, ok := used_files[name]; ok {
-		uf.count--
-		if uf.count == 0 {
+		uf.Count--
+		if uf.Count == 0 {
 			delete(used_files, name)
 		}
 	}
 	used_files_mu.Unlock()
 
 	return bytes
+}
+
+func cacheHas(url string) bool {
+	h := sha256.New()
+	h.Write([]byte(url))
+	name := fmt.Sprintf("%x", h.Sum(nil))
+	cache_file := cache_path + name
+	_, err := os.Stat(cache_file)
+	
+	return err == nil
+}
+
+func cacheGetURL(url string) []byte {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		debug(0, "Unable to create HTTP Get: %s\n", err)
+		return nil
+	}
+	
+	return cacheGet(req)
 }
 
 func checkCache(minutes int) {
@@ -162,7 +186,7 @@ func checkCache(minutes int) {
 			
 			uf, ok := used_files[f.Name()]
 			if ok {
-				uf.mu.Lock()
+				uf.Mu.Lock()
 			}
 
 			name := cache_path + f.Name()
@@ -173,7 +197,7 @@ func checkCache(minutes int) {
 			}
 
 			if ok {
-				uf.mu.Unlock()
+				uf.Mu.Unlock()
 			}
 			used_files_mu.Unlock()
 		}
@@ -185,7 +209,7 @@ func checkCache(minutes int) {
 func getNamespaceRepos(wait *sync.WaitGroup, url string, repos *[]NamespaceRepository, repos_mu *sync.Mutex, query string, automated int, is_official bool) {
 	debug(3, "Namespace routine getting: %s\n", url)
 
-	bytes := cacheGet(url)
+	bytes := cacheGetURL(url)
 	var add_repos []NamespaceRepository
 	
 	if len(bytes) > 0 {
@@ -288,6 +312,110 @@ func addLog(r *http.Request) {
 	}
 }
 
+func getManifestURL(image string) string {
+	return "https://registry-1.docker.io/v2/" + image + "/manifests/latest"
+}
+
+func getArchInfo(image string) ArchInfo {
+	var bytes []byte
+	
+	if url := getManifestURL(image); cacheHas(url) {
+		bytes = cacheGetURL(url)
+	} else {
+		resp, err := https.Get("https://auth.docker.io/token?service=registry.docker.io&scope=repository:" + image + ":pull")
+		if err != nil {
+			return ArchInfo{}
+		}
+		
+		bytes, err = ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return ArchInfo{}
+		}
+		
+		var data map[string]interface{}
+		if err := json.Unmarshal(bytes, &data); err != nil {
+			return ArchInfo{}
+		}
+		
+		token := data["token"].(string)
+
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return ArchInfo{}
+		}
+		
+		req.Header.Set("Authorization", "Bearer " + token)
+		req.Header.Set("Accept", "application/vnd.docker.distribution.manifest.list.v2+json")
+
+		bytes = cacheGet(req)
+	}
+	
+	if len(bytes) == 0 {
+		return ArchInfo{}
+	}
+
+	var data map[string]interface{}
+	if err := json.Unmarshal(bytes, &data); err != nil {
+		return ArchInfo{}
+	}
+	
+	if data["errors"] != nil {
+		return ArchInfo{}
+	}
+	
+	if schema := int(data["schemaVersion"].(float64)); schema == 1 {
+		var info ArchInfo
+		
+		info.Arch = []string{ data["architecture"].(string) }
+		info.Os = []string{ }
+		
+		return info
+	} else if schema == 2 {
+		manifests := data["manifests"].([]interface{})
+		
+		var info ArchInfo
+		
+		var arch []string
+		var os []string
+		
+		for i := 0; i < len(manifests); i++ {
+			a := manifests[i].(map[string]interface{})["platform"].(map[string]interface{})["architecture"].(string)
+			o := manifests[i].(map[string]interface{})["platform"].(map[string]interface{})["os"].(string)
+			
+			add := true
+			for e := 0; e < len(arch); e++ {
+				if arch[e] == a {
+					add = false
+					break
+				}
+			}
+			
+			if add {
+				arch = append(arch, a)
+			}
+			
+			add = true
+			for e := 0; e < len(os); e++ {
+				if os[e] == o {
+					add = false
+					break
+				}
+			}
+			
+			if add {
+				os = append(os, o)
+			}
+		}
+		
+		info.Arch = arch
+		info.Os = os
+		return info
+	}
+	
+	return ArchInfo{}
+}
+
 func main() {
 	usage := flag.Usage
 	flag.Usage = func() {
@@ -346,7 +474,6 @@ func main() {
 	// Handles file requests
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
-		
 		addLog(r)
 
 		bytes, err := ioutil.ReadFile(web_path + r.URL.Path[1:])
@@ -365,7 +492,6 @@ func main() {
 	// Handles search requests
 	http.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
-		
 		addLog(r)
 
 		w.Header().Set("Content-Type", "application/json")
@@ -413,7 +539,7 @@ func main() {
 
 			// Quick check for 0 results
 			if !(official == 1 && automated == 1) && !(official == 0 && is_official) && (official != 1 || is_official) {
-				bytes := cacheGet("https://hub.docker.com/v2/repositories/" + namespace + "?page_size=1&page=1")
+				bytes := cacheGetURL("https://hub.docker.com/v2/repositories/" + namespace + "?page_size=1&page=1")
 				if len(bytes) > 0 {
 					var data map[string]interface{}
 					err := json.Unmarshal(bytes, &data)
@@ -508,8 +634,7 @@ func main() {
 
 			query_loop:
 				for i := int(start/100) + 1; len(repos) < page_size; i++ {
-					bytes := cacheGet("https://hub.docker.com/v2/search/repositories/" + "?page_size=100&page=" + strconv.Itoa(i) + "&query=" + query + order)
-
+					bytes := cacheGetURL("https://hub.docker.com/v2/search/repositories/" + "?page_size=100&page=" + strconv.Itoa(i) + "&query=" + query + order)
 					if len(bytes) > 0 {
 						var data map[string]interface{}
 						err := json.Unmarshal(bytes, &data)
@@ -591,6 +716,34 @@ func main() {
 		} else {
 			w.WriteHeader(400)
 			w.Write([]byte("{\"error\":{\"message\":\"Incorrect query parameters\"}}\n"))
+		}
+	})
+	
+	http.HandleFunc("/arch", func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+		addLog(r)
+		
+		w.Header().Set("Content-Type", "application/json")
+		
+		i := r.FormValue("i")
+		if len(i) > 0 {
+			images := strings.Split(i, ",")
+			results := make(map[string]ArchInfo)
+			
+			for e := 0; e < len(images); e++ {
+				results[images[e]] = getArchInfo(images[e])
+			}
+			
+			resp, err := json.Marshal(results)
+			if err != nil {
+				debug(0, "JSON Marshal error: %s\n", err)
+				w.Write([]byte("{}"))
+			} else {
+				w.Write(resp)
+			}
+		} else {
+			w.WriteHeader(400)
+			w.Write([]byte("{\"error\":{\"message\":\"No images parameter found\"}}\n"))
 		}
 	})
 

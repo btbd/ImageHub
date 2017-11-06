@@ -18,14 +18,26 @@
 		SORT_NAMESPACE_DOWN = 1,
 		SORT_REPOSITORY_UP = 2,
 		SORT_REPOSITORY_DOWN = 3,
-		SORT_TYPE_UP = 4,
-		SORT_TYPE_DOWN = 5,
-		SORT_AUTOMATED_UP = 6,
-		SORT_AUTOMATED_DOWN = 7,
-		SORT_STARS_UP = 8,
-		SORT_STARS_DOWN = 9,
-		SORT_PULLS_UP = 10,
-		SORT_PULLS_DOWN = 11;
+		SORT_AMD64_UP = 4,
+		SORT_AMD64_DOWN = 5,
+		SORT_ARM_UP = 6,
+		SORT_ARM_DOWN = 7,
+		SORT_ARM64_UP = 8,
+		SORT_ARM64_DOWN = 9,
+		SORT_386_UP = 10,
+		SORT_386_DOWN = 11,
+		SORT_PPC64LE_UP = 12,
+		SORT_PPC64LE_DOWN = 13,
+		SORT_S390X_UP = 14,
+		SORT_S390X_DOWN = 15,
+		SORT_TYPE_UP = 16,
+		SORT_TYPE_DOWN = 17,
+		SORT_AUTOMATED_UP = 18,
+		SORT_AUTOMATED_DOWN = 19,
+		SORT_STARS_UP = 20,
+		SORT_STARS_DOWN = 21,
+		SORT_PULLS_UP = 22,
+		SORT_PULLS_DOWN = 23;
 
 	var sort = SORT_REPOSITORY_UP;
 
@@ -84,17 +96,25 @@
 
 		for (var i = 0; i < results.length && id === search_id && search_done < search_total; ++i, ++search_done) {
 			var row = e_results.insertRow(-1);
+			$(row).attr("id", results[i].namespace + "/" + results[i].name);
 			row.insertCell(0).innerHTML = "<a href=\"" + window.location.href.replace(window.location.search, "") + "?n=" + results[i].namespace + "\">" + results[i].namespace + "</a>";
 			row.insertCell(1).innerHTML = "<a href=\"https://hub.docker.com/" + (results[i].is_official ? "_/" : "r/" + (results[i].namespace ? results[i].namespace + "/" : "")) + results[i].name + "\">" + results[i].name + "</a>";
 			addCellHover(row.cells[1], false)
+			
+			row.insertCell(2).innerHTML = "-";
+			row.insertCell(3).innerHTML = "-";
+			row.insertCell(4).innerHTML = "-";
+			row.insertCell(5).innerHTML = "-";
+			row.insertCell(6).innerHTML = "-";
+			row.insertCell(7).innerHTML = "-";
 
-			row.insertCell(2).innerHTML = results[i].is_official ? "official" : !results[i].is_private ? "public" : "private";
-			row.insertCell(3).innerHTML = results[i].is_automated ? "yes" : "no";
-			row.insertCell(4).innerHTML = results[i].star_count.toString();
-			row.insertCell(5).innerHTML = results[i].pull_count.toString();
-			row.insertCell(6).innerHTML = results[i].description;
-			$(row.cells[6]).css({ "text-overflow": "ellipsis" });
-			addCellHover(row.cells[6], true);
+			row.insertCell(8).innerHTML = results[i].is_official ? "official" : !results[i].is_private ? "public" : "private";
+			row.insertCell(9).innerHTML = results[i].is_automated ? "yes" : "no";
+			row.insertCell(10).innerHTML = results[i].star_count.toString();
+			row.insertCell(11).innerHTML = results[i].pull_count.toString();
+			row.insertCell(12).innerHTML = results[i].description;
+			$(row.cells[12]).css({ "text-overflow": "ellipsis" });
+			addCellHover(row.cells[12], true);
 		}
 
 		if (search_done !== 0 && search_total !== 0) e_progress.innerHTML = "Progress: " + Math.round((search_done / search_total) * 100) + "%";
@@ -149,7 +169,7 @@
 					return a.cells[0].innerText.localeCompare(b.cells[0].innerText);
 				});
 				break;
-			case SORT_TYPE_UP:
+			case SORT_AMD64_UP:
 				rows.sort(function(a, b) {
 					var r = a.cells[2].innerText.localeCompare(b.cells[2].innerText);
 					if (r !== 0) return r;
@@ -157,7 +177,7 @@
 					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
 				});
 				break;
-			case SORT_TYPE_DOWN:
+			case SORT_AMD64_DOWN:
 				rows.sort(function(a, b) {
 					var r = -a.cells[2].innerText.localeCompare(b.cells[2].innerText);
 					if (r !== 0) return r;
@@ -165,7 +185,7 @@
 					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
 				});
 				break;
-			case SORT_AUTOMATED_UP:
+			case SORT_ARM_UP:
 				rows.sort(function(a, b) {
 					var r = a.cells[3].innerText.localeCompare(b.cells[3].innerText);
 					if (r !== 0) return r;
@@ -173,7 +193,7 @@
 					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
 				});
 				break;
-			case SORT_AUTOMATED_DOWN:
+			case SORT_ARM_DOWN:
 				rows.sort(function(a, b) {
 					var r = -a.cells[3].innerText.localeCompare(b.cells[3].innerText);
 					if (r !== 0) return r;
@@ -181,9 +201,105 @@
 					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
 				});
 				break;
+			case SORT_ARM64_UP:
+				rows.sort(function(a, b) {
+					var r = a.cells[4].innerText.localeCompare(b.cells[4].innerText);
+					if (r !== 0) return r;
+					
+					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
+				});
+				break;
+			case SORT_ARM64_DOWN:
+				rows.sort(function(a, b) {
+					var r = -a.cells[4].innerText.localeCompare(b.cells[4].innerText);
+					if (r !== 0) return r;
+					
+					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
+				});
+				break;
+			case SORT_386_UP:
+				rows.sort(function(a, b) {
+					var r = a.cells[5].innerText.localeCompare(b.cells[5].innerText);
+					if (r !== 0) return r;
+					
+					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
+				});
+				break;
+			case SORT_386_DOWN:
+				rows.sort(function(a, b) {
+					var r = -a.cells[5].innerText.localeCompare(b.cells[5].innerText);
+					if (r !== 0) return r;
+					
+					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
+				});
+				break;
+			case SORT_PPC64LE_UP:
+				rows.sort(function(a, b) {
+					var r = a.cells[6].innerText.localeCompare(b.cells[6].innerText);
+					if (r !== 0) return r;
+					
+					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
+				});
+				break;
+			case SORT_PPC64LE_DOWN:
+				rows.sort(function(a, b) {
+					var r = -a.cells[6].innerText.localeCompare(b.cells[6].innerText);
+					if (r !== 0) return r;
+					
+					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
+				});
+				break;
+			case SORT_S390X_UP:
+				rows.sort(function(a, b) {
+					var r = a.cells[7].innerText.localeCompare(b.cells[7].innerText);
+					if (r !== 0) return r;
+					
+					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
+				});
+				break;
+			case SORT_S390X_DOWN:
+				rows.sort(function(a, b) {
+					var r = -a.cells[7].innerText.localeCompare(b.cells[7].innerText);
+					if (r !== 0) return r;
+					
+					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
+				});
+				break;
+			case SORT_TYPE_UP:
+				rows.sort(function(a, b) {
+					var r = a.cells[8].innerText.localeCompare(b.cells[8].innerText);
+					if (r !== 0) return r;
+					
+					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
+				});
+				break;
+			case SORT_TYPE_DOWN:
+				rows.sort(function(a, b) {
+					var r = -a.cells[8].innerText.localeCompare(b.cells[8].innerText);
+					if (r !== 0) return r;
+					
+					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
+				});
+				break;
+			case SORT_AUTOMATED_UP:
+				rows.sort(function(a, b) {
+					var r = a.cells[9].innerText.localeCompare(b.cells[9].innerText);
+					if (r !== 0) return r;
+					
+					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
+				});
+				break;
+			case SORT_AUTOMATED_DOWN:
+				rows.sort(function(a, b) {
+					var r = -a.cells[9].innerText.localeCompare(b.cells[9].innerText);
+					if (r !== 0) return r;
+					
+					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
+				});
+				break;
 			case SORT_STARS_UP:
 				rows.sort(function(a, b) {
-					var r = -(parseInt(b.cells[4].innerText) - parseInt(a.cells[4].innerText));
+					var r = -(parseInt(b.cells[10].innerText) - parseInt(a.cells[10].innerText));
 					if (r !== 0) return r;
 					
 					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
@@ -191,7 +307,7 @@
 				break;
 			case SORT_STARS_DOWN:
 				rows.sort(function(a, b) {
-					var r = parseInt(b.cells[4].innerText) - parseInt(a.cells[4].innerText);
+					var r = parseInt(b.cells[10].innerText) - parseInt(a.cells[10].innerText);
 					if (r !== 0) return r;
 					
 					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
@@ -199,7 +315,7 @@
 				break;
 			case SORT_PULLS_UP:
 				rows.sort(function(a, b) {
-					var r = -(parseInt(b.cells[5].innerText) - parseInt(a.cells[5].innerText));
+					var r = -(parseInt(b.cells[11].innerText) - parseInt(a.cells[11].innerText));
 					if (r !== 0) return r;
 					
 					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
@@ -207,7 +323,7 @@
 				break;
 			case SORT_PULLS_DOWN:
 				rows.sort(function(a, b) {
-					var r = parseInt(b.cells[5].innerText) - parseInt(a.cells[5].innerText);
+					var r = parseInt(b.cells[11].innerText) - parseInt(a.cells[11].innerText);
 					if (r !== 0) return r;
 					
 					return a.cells[1].innerText.localeCompare(b.cells[1].innerText);
@@ -215,16 +331,32 @@
 				break;
 		}
 
-		
+		e_results.tBodies.length = 0;
+		e_results.appendChild(document.createElement("tbody"));
 		for (var i = 0; i < rows.length; ++i) {
-			e_results.deleteRow(0);
-			e_results.insertRow(-1).innerHTML = rows[i].innerHTML;
+			e_results.tBodies[0].appendChild(rows[i]);
 		}
-		
-		var cells = e_results.getElementsByTagName("td");
-		for (var i = 1; i < cells.length; i += e_results.rows[0].cells.length) {
-			addCellHover(cells[i], false);
-			addCellHover(cells[i + 5], true);
+	}
+	
+	function addArchInfo(id, img, info) {
+		if (id === search_id) {
+			var e = document.getElementById(img);
+			if (e) {
+				if (info.arch && info.arch.length > 0) {
+					e.cells[2].innerHTML = info.arch.indexOf("amd64") !== -1 ? "<div style=\"color: green;\">✓</div>" : "<div style=\"color: red;\">✕</div>";
+					e.cells[3].innerHTML = info.arch.indexOf("arm") !== -1 ? "<div style=\"color: green;\">✓</div>" : "<div style=\"color: red;\">✕</div>";
+					e.cells[4].innerHTML = info.arch.indexOf("arm64") !== -1 ? "<div style=\"color: green;\">✓</div>" : "<div style=\"color: red;\">✕</div>";
+					e.cells[5].innerHTML = info.arch.indexOf("386") !== -1 ? "<div style=\"color: green;\">✓</div>" : "<div style=\"color: red;\">✕</div>";
+					e.cells[6].innerHTML = info.arch.indexOf("ppc64le") !== -1 ? "<div style=\"color: green;\">✓</div>" : "<div style=\"color: red;\">✕</div>";
+					e.cells[7].innerHTML = info.arch.indexOf("s390x") !== -1 ? "<div style=\"color: green;\">✓</div>" : "<div style=\"color: red;\">✕</div>";
+				} else {
+					for (var i = 0; i < 6; ++i) e.cells[2 + i].innerHTML = "<div style=\"color: red;\">✕</div>";
+				}
+				
+				/* if (info.os) {
+					
+				} */
+			}
 		}
 	}
 	
@@ -234,17 +366,42 @@
 		$(e_results).attr("style", "");
 		$(e_results).css("width", "100%");
 		$("body").removeClass("wait");
+		
+		var id = search_id;
+		var imgs = "";
+		for (var i = 0; i < e_results.rows.length && id === search_id; ++i) {
+			imgs += e_results.rows[i].cells[0].innerText + "%2F" + e_results.rows[i].cells[1].innerText;
+			if ((i > 0 && (i + 1) % 25 === 0) || i + 1 === e_results.rows.length) {
+				$.getJSON("./arch?i=" + imgs, function(e) {
+					if (id === search_id) {
+						for (var r in e) {
+							if (id !== search_id) break;
+							addArchInfo(id, r, e[r]);
+						}
+						
+						if (id === search_id) {
+							sortResults();
+						}
+					}
+				});
+				
+				imgs = "";
+			} else {
+				imgs += ",";
+			}
+		}
 	}
 
 	function addCellHover(cell, click) {
 		$(cell).mouseover(function(e) {
 			if (this.offsetWidth < this.scrollWidth) {
+				var p = this.getBoundingClientRect().top;
 				e_description.innerText = this.innerText;
 				$(e_description).attr("style", "");
 				$(e_description).css({
 					"box-shadow": "0px 0px 10px #000000",
 					padding: "5px 5px 5px 5px",
-					top: this.getBoundingClientRect().top - this.offsetHeight - 10,
+					top: p - e_description.offsetHeight - 10,
 					right: $(window).width() - this.getBoundingClientRect().right
 				});
 			}
@@ -270,7 +427,7 @@
 					$(e_description).css({
 						"box-shadow": "0px 0px 10px #000000",
 						padding: "5px 5px 5px 5px",
-						top: this.getBoundingClientRect().top - this.offsetHeight + 10,
+						top: this.getBoundingClientRect().top - this.offsetHeight + 15,
 						right: $(window).width() - this.getBoundingClientRect().right
 					});
 				}
@@ -360,6 +517,108 @@
 			$("#repository_down").css("visibility", "hidden");
 			$("#repository_up").css("visibility", "visible");
 			sort = SORT_REPOSITORY_UP;
+		}
+		
+		sortResults();
+	});
+	
+	$("#label_amd64").mousedown(function() {
+		hideArrows();
+		$("#amd64_down, #amd64_up").attr("style", "");
+		
+		if (sort == SORT_AMD64_UP) {
+			$("#amd64_down").css("visibility", "visible");
+			$("#amd64_up").css({ visibility: "hidden", position: "absolute" });
+			sort = SORT_AMD64_DOWN;
+		} else {
+			$("#amd64_down").css("visibility", "hidden");
+			$("#amd64_up").css("visibility", "visible");
+			sort = SORT_AMD64_UP;
+		}
+		
+		sortResults();
+	});
+	
+	$("#label_arm").mousedown(function() {
+		hideArrows();
+		$("#arm_down, #arm_up").attr("style", "");
+		
+		if (sort == SORT_ARM_UP) {
+			$("#arm_down").css("visibility", "visible");
+			$("#arm_up").css({ visibility: "hidden", position: "absolute" });
+			sort = SORT_ARM_DOWN;
+		} else {
+			$("#arm_down").css("visibility", "hidden");
+			$("#arm_up").css("visibility", "visible");
+			sort = SORT_ARM_UP;
+		}
+		
+		sortResults();
+	});
+	
+	$("#label_arm64").mousedown(function() {
+		hideArrows();
+		$("#arm64_down, #arm64_up").attr("style", "");
+		
+		if (sort == SORT_ARM64_UP) {
+			$("#arm64_down").css("visibility", "visible");
+			$("#arm64_up").css({ visibility: "hidden", position: "absolute" });
+			sort = SORT_ARM64_DOWN;
+		} else {
+			$("#arm64_down").css("visibility", "hidden");
+			$("#arm64_up").css("visibility", "visible");
+			sort = SORT_ARM64_UP;
+		}
+		
+		sortResults();
+	});
+	
+	$("#label_386").mousedown(function() {
+		hideArrows();
+		$("#386_down, #386_up").attr("style", "");
+		
+		if (sort == SORT_386_UP) {
+			$("#386_down").css("visibility", "visible");
+			$("#386_up").css({ visibility: "hidden", position: "absolute" });
+			sort = SORT_386_DOWN;
+		} else {
+			$("#386_down").css("visibility", "hidden");
+			$("#386_up").css("visibility", "visible");
+			sort = SORT_386_UP;
+		}
+		
+		sortResults();
+	});
+	
+	$("#label_ppc64le").mousedown(function() {
+		hideArrows();
+		$("#ppc64le_down, #ppc64le_up").attr("style", "");
+		
+		if (sort == SORT_PPC64LE_UP) {
+			$("#ppc64le_down").css("visibility", "visible");
+			$("#ppc64le_up").css({ visibility: "hidden", position: "absolute" });
+			sort = SORT_PPC64LE_DOWN;
+		} else {
+			$("#ppc64le_down").css("visibility", "hidden");
+			$("#ppc64le_up").css("visibility", "visible");
+			sort = SORT_PPC64LE_UP;
+		}
+		
+		sortResults();
+	});
+	
+	$("#label_s390x").mousedown(function() {
+		hideArrows();
+		$("#s390x_down, #s390x_up").attr("style", "");
+		
+		if (sort == SORT_S390X_UP) {
+			$("#s390x_down").css("visibility", "visible");
+			$("#s390x_up").css({ visibility: "hidden", position: "absolute" });
+			sort = SORT_S390X_DOWN;
+		} else {
+			$("#s390x_down").css("visibility", "hidden");
+			$("#s390x_up").css("visibility", "visible");
+			sort = SORT_S390X_UP;
 		}
 		
 		sortResults();
@@ -471,6 +730,7 @@
 				var e = s.indexOf("&", i);
 				if (s.substring(i + 2, e === -1 ? s.length : e) === "1") {
 					e_official.checked = true;
+					e_namespace.disabled = true;
 				}
 			}
 			
