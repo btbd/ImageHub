@@ -31,6 +31,8 @@
 				text-align: left;
 				overflow: hidden;
 				white-space: nowrap;
+				vertical-align: top;
+				padding: 0px;
 			}
 			
 			th {
@@ -51,32 +53,32 @@
 			tr td:nth-child(2) { width: 16.66%; }
 			tr th:nth-child(2) { width: 16.66%; }
 			
-			tr td:nth-child(3) { width: 4.17%; }
-			tr th:nth-child(3) { width: 4.17%; }
+			tr td:nth-child(3) { width: 4.63%; text-align: center; }
+			tr th:nth-child(3) { width: 4.63%; text-align: center; }
 			
-			tr td:nth-child(4) { width: 4.17%; }
-			tr th:nth-child(4) { width: 4.17%; }
+			tr td:nth-child(4) { width: 4.63%; text-align: center; }
+			tr th:nth-child(4) { width: 4.63%; text-align: center; }
 			
-			tr td:nth-child(5) { width: 4.17%; }
-			tr th:nth-child(5) { width: 4.17%; }
+			tr td:nth-child(5) { width: 4.63%; text-align: center; }
+			tr th:nth-child(5) { width: 4.63%; text-align: center; }
 			
-			tr td:nth-child(6) { width: 4.17%; }
-			tr th:nth-child(6) { width: 4.17%; }
+			tr td:nth-child(6) { width: 4.63%; text-align: center; }
+			tr th:nth-child(6) { width: 4.63%; text-align: center; }
 			
-			tr td:nth-child(7) { width: 4.17%; }
-			tr th:nth-child(7) { width: 4.17%; }
+			tr td:nth-child(7) { width: 4.63%; text-align: center; }
+			tr th:nth-child(7) { width: 4.63%; text-align: center; }
 			
-			tr td:nth-child(8) { width: 4.17%; }
-			tr th:nth-child(8) { width: 4.17%; }
+			tr td:nth-child(8) { width: 4.63%; text-align: center; }
+			tr th:nth-child(8) { width: 4.63%; text-align: center; }
 			
-			tr td:nth-child(9) { width: 4.17%; }
-			tr th:nth-child(9) { width: 4.17%; }
+			tr td:nth-child(9) { width: 4.63%; }
+			tr th:nth-child(9) { width: 4.63%; }
 			
-			tr td:nth-child(10) { width: 4.17%; }
-			tr th:nth-child(10) { width: 4.17%; }
+			tr td:nth-child(10) { width: 4.63%; text-align: center; }
+			tr th:nth-child(10) { width: 4.63%; text-align: center; }
 			
-			tr td:nth-child(11) { width: 8.33%; }
-			tr th:nth-child(11) { width: 8.33%; }
+			tr td:nth-child(11) { width: 4.63%; }
+			tr th:nth-child(11) { width: 4.63%; }
 			
 			tr td:nth-child(12) { width: 8.33%; }
 			tr th:nth-child(12) { width: 8.33%; }
@@ -92,11 +94,7 @@
 				border-left: 7px solid transparent;
 				border-right: 7px solid transparent;
 				border-bottom: 7px solid black;
-			}
-
-			.arrow-up:hover {
-				cursor: pointer;
-				cursor: hand;
+				position: absolute;
 			}
 
 			.arrow-down {
@@ -107,13 +105,9 @@
 				border-left: 7px solid transparent;
 				border-right: 7px solid transparent;
 				border-top: 7px solid black;
+				position: absolute;
 			}
 
-			.arrow-down:hover {
-				cursor: pointer;
-				cursor: hand;
-			}
-			
 			th .arrow-up, th .arrow-down {
 				visibility: hidden;
 			}
@@ -141,6 +135,39 @@
 			#results_holder {
 				border: 2px solid #c4cdda;
 				background-color: #edf6ff;
+			}
+			
+			.x {
+				color: red;
+			}
+			
+			.check {
+				color: green;
+			}
+			
+			.twisty {
+				padding-right: 5px;
+				display: inline-block;
+				float: right;
+				-webkit-touch-callout: none;
+				-webkit-user-select: none;
+				-khtml-user-select: none;
+				-moz-user-select: none;
+				-ms-user-select: none;
+				user-select: none;
+			}
+
+			.twisty:hover {
+				cursor: pointer;
+				cursor: hand;
+			}
+			
+			.tag-row-even {
+				background-color: #ccdde2;
+			}
+			
+			.tag-row-odd {
+				
 			}
 		</style>
 		<title>ImageHub</title>
