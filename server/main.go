@@ -15,6 +15,7 @@ import (
 var log_mu sync.Mutex
 var verbose = 1
 var web_path = "web"
+var log_path = "./"
 
 var https = &http.Client{Transport: &http.Transport{
 	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -33,9 +34,9 @@ func addLog(r *http.Request) {
 	
 	log := time.Now().Format(time.RFC3339) + " " + r.RemoteAddr + " " + r.URL.Path[1:] + "?" + r.URL.RawQuery + "\n"
 	
-	f, err := os.OpenFile("imagehub.log", os.O_APPEND | os.O_WRONLY, 0600)
+	f, err := os.OpenFile(log_path + "imagehub.log", os.O_APPEND | os.O_WRONLY, 0600)
 	if err != nil {
-		if err := ioutil.WriteFile("imagehub.log", []byte(log), 0644); err != nil {
+		if err := ioutil.WriteFile(log_path + "imagehub.log", []byte(log), 0644); err != nil {
 			debug(0, "Unable to create log file: %s\n", err)
 			os.Exit(1)
 		}
@@ -63,7 +64,8 @@ func main() {
 	}
 
 	flag.IntVar(&expire, "expire", expire, "time (mins) items live in the cache")
-	flag.StringVar(&cache_path, "path", cache_path, "dir path for the cache")
+	flag.StringVar(&cache_path, "cache-path", cache_path, "dir path for the cache")
+	flag.StringVar(&log_path, "log-path", log_path, "path for the log file")
 	flag.IntVar(&port, "port", port, "port number for the server to listen on")
 	flag.IntVar(&verbose, "v", verbose, "verbose/debug level")
 	flag.StringVar(&web_path, "web", web_path, "web dir")
@@ -75,6 +77,10 @@ func main() {
 	
 	if len(web_path) == 0 {
 		web_path = "."
+	}
+	
+	if len(log_path) == 0 {
+		log_path = "."
 	}
 	
 	fi, err := os.Stat(web_path)
@@ -99,6 +105,10 @@ func main() {
 	
 	if web_path[len(web_path)-1] != os.PathSeparator {
 		web_path += string(os.PathSeparator)
+	}
+	
+	if log_path[len(log_path)-1] != os.PathSeparator {
+		log_path += string(os.PathSeparator)
 	}
 	
 	go checkCache(expire)
