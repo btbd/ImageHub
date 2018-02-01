@@ -4,74 +4,52 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"strings"
-	"sync"
-	"fmt"
 	"strconv"
+	"net/url"
 )
 
-type ArchInfo struct {
-	Arch []string `json:"arch"`
-	Os   []string `json:"os"`
+type Manifest struct {
+	Architecture string `json:"architecture"`
+	Os           string `json:"os"`
+	Os_version   string `json:"os_version"`
+	Variant      string `json:"variant"`
 }
 
-func getManifestURL(image string) string {
-	return "https://registry-1.docker.io/v2/" + image + "/manifests/latest"
+func getManifestURL(image string, tag string) string {
+	return "https://registry-1.docker.io/v2/" + image + "/manifests/" + tag
 }
 
-func formatRequest(r *http.Request) string {
- // Create return string
- var request []string
- // Add the request string
- url := fmt.Sprintf("%v %v %v", r.Method, r.URL, r.Proto)
- request = append(request, url)
- // Add the host
- request = append(request, fmt.Sprintf("Host: %v", r.Host))
- // Loop through headers
- for name, headers := range r.Header {
-   name = strings.ToLower(name)
-   for _, h := range headers {
-     request = append(request, fmt.Sprintf("%v: %v", name, h))
-   }
- }
- 
- // If this is a POST, add post data
- if r.Method == "POST" {
-    r.ParseForm()
-    request = append(request, "\n")
-    request = append(request, r.Form.Encode())
- } 
-  // Return the request as a string
-  return strings.Join(request, "\n")
+func getTagURL(image string, page int) string {
+	return "https://hub.docker.com/v2/repositories/" + image + "/tags/?page_size=100&page=" + strconv.Itoa(page)
 }
 
-func getArchInfo(image string) ArchInfo {
+func getManifestInfo(image string, tag string) []Manifest {
 	var bytes []byte
-	
-	if url := getManifestURL(image); cacheHas(url) {
+
+	if url := getManifestURL(image, tag); cacheHas(url) {
 		bytes = cacheGetURL(url)
 	} else {
 		resp, err := https.Get("https://auth.docker.io/token?service=registry.docker.io&scope=repository:" + image + ":pull")
 		if err != nil {
-			return ArchInfo{}
+			return nil
 		}
 		
 		bytes, err = ioutil.ReadAll(resp.Body)
 		resp.Body.Close()
 		if err != nil {
-			return ArchInfo{}
+			return nil
 		}
 		
 		var data map[string]interface{}
 		if err := json.Unmarshal(bytes, &data); err != nil {
-			return ArchInfo{}
+			return nil
 		}
 		
 		token := data["token"].(string)
 
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
-			return ArchInfo{}
+			return nil
 		}
 		
 		req.Header.Set("Authorization", "Bearer " + token)
@@ -81,157 +59,69 @@ func getArchInfo(image string) ArchInfo {
 	}
 	
 	if len(bytes) == 0 {
-		return ArchInfo{}
+		return nil
 	}
-
+	
 	var data map[string]interface{}
 	if err := json.Unmarshal(bytes, &data); err != nil {
-		return ArchInfo{}
+		return nil
 	}
 	
 	if data["errors"] != nil {
-		return ArchInfo{}
+		return nil
 	}
 	
 	if schema := int(data["schemaVersion"].(float64)); schema == 1 {
-		var info ArchInfo
-		
-		info.Arch = []string{ data["architecture"].(string) }
-		info.Os = []string{ }
+		var info []Manifest
+
+		info = append(info, Manifest{ data["architecture"].(string), "", "", "" })
 		
 		return info
 	} else if schema == 2 {
+		var info []Manifest
+		
 		manifests := data["manifests"].([]interface{})
-		
-		var info ArchInfo
-		
-		var arch []string
-		var os []string
-		
 		for i := 0; i < len(manifests); i++ {
-			a := manifests[i].(map[string]interface{})["platform"].(map[string]interface{})["architecture"].(string)
-			o := manifests[i].(map[string]interface{})["platform"].(map[string]interface{})["os"].(string)
-			
-			add := true
-			for e := 0; e < len(arch); e++ {
-				if arch[e] == a {
-					add = false
-					break
+			platform := manifests[i].(map[string]interface{})["platform"].(map[string]interface{})
+		
+			if platform != nil {
+				architecture := ""
+				if platform["architecture"] != nil {
+					architecture = platform["architecture"].(string)
 				}
-			}
-			
-			if add {
-				arch = append(arch, a)
-			}
-			
-			add = true
-			for e := 0; e < len(os); e++ {
-				if os[e] == o {
-					add = false
-					break
+				
+				os := ""
+				if platform["os"] != nil {
+					os = platform["os"].(string)
 				}
-			}
+				
+				version := ""
+				if platform["os.version"] != nil {
+					version = platform["os.version"].(string)
+				}
+				
+				variant := ""
+				if platform["variant"] != nil {
+					variant = platform["variant"].(string)
+				}
 			
-			if add {
-				os = append(os, o)
+				info = append(info, Manifest{ architecture, os, version, variant })
 			}
 		}
 		
-		info.Arch = arch
-		info.Os = os
 		return info
 	}
-	
-	return ArchInfo{}
+
+	return nil
 }
 
-func getNamespaceRepos(wait *sync.WaitGroup, url string, repos *[]NamespaceRepository, repos_mu *sync.Mutex, query string, automated int, is_official bool) {
-	debug(3, "Namespace routine getting: %s\n", url)
-
-	bytes := cacheGetURL(url)
-	var add_repos []NamespaceRepository
-	
-	if len(bytes) > 0 {
-		var data map[string]interface{}
-		err := json.Unmarshal(bytes, &data)
-		if err == nil && !(data["detail"] != nil && data["detail"].(string) == "Not found") {
-			results := data["results"].([]interface{})
-			for e := 0; e < len(results); e++ {
-				result := results[e].(map[string]interface{})
-
-				name := ""
-				if r := result["name"]; r != nil {
-					name = r.(string)
-				}
-
-				description := ""
-				if r := result["description"]; r != nil {
-					description = r.(string)
-				}
-
-				if len(query) > 0 && !(strings.Contains(strings.ToLower(name), query) || strings.Contains(strings.ToLower(description), query)) {
-					continue
-				}
-
-				is_automated := false
-				if r := result["is_automated"]; r != nil {
-					is_automated = r.(bool)
-				}
-
-				if (automated == 0 && is_automated) || (automated == 1 && !is_automated) {
-					continue
-				}
-
-				is_private := false
-				if r := result["is_private"]; r != nil {
-					is_private = r.(bool)
-				}
-
-				namespace := ""
-				if r := result["namespace"]; r != nil {
-					namespace = r.(string)
-				}
-
-				type_ := ""
-				if r := result["repository_type"]; r != nil {
-					type_ = r.(string)
-				}
-
-				status := 0
-				if r := result["status"]; r != nil {
-					status = int(r.(float64))
-				}
-
-				star_count := 0
-				if r := result["star_count"]; r != nil {
-					star_count = int(r.(float64))
-				}
-
-				pull_count := 0
-				if r := result["pull_count"]; r != nil {
-					pull_count = int(r.(float64))
-				}
-
-				last_updated := ""
-				if r := result["last_updated"]; r != nil {
-					last_updated = r.(string)
-				}
-
-				add_repos = append(add_repos, NamespaceRepository{name, namespace, type_, status, description, is_automated, is_private, is_official, star_count, pull_count, last_updated})
-			}
-		} else {
-			debug(1, "  Bad request: %s\n", string(bytes))
-		}
+func getTags(image string, p ...int) []interface{} {
+	page := 1
+	if len(p) > 0 {
+		page = p[0]
 	}
-	
-	repos_mu.Lock()
-	*repos = append(*repos, add_repos...)
-	repos_mu.Unlock()
-	wait.Done()
-}
 
-func getTags(image string, page int) []interface{} {
-	bytes := cacheGetURL("https://hub.docker.com/v2/repositories/" + image + "/tags/?page_size=100&page=" + strconv.Itoa(page))
+	bytes := cacheGetURL(getTagURL(image, page))
 	if len(bytes) == 0 {
 		return nil
 	}
@@ -246,7 +136,7 @@ func getTags(image string, page int) []interface{} {
 	}
 	
 	var tags []interface{} = data["results"].([]interface{})
-	
+
 	if data["next"] != nil {
 		var add []interface{} = getTags(image, page + 1)
 		if add != nil {
@@ -294,16 +184,26 @@ func getTags(image string, page int) []interface{} {
 					delete(img, "os_features")
 				}
 				
-				if _, e := img["os_version"]; e {
-					delete(img, "os_version")
-				}
-				
 				if _, e := img["variant"]; e {
 					delete(img, "variant")
 				}
 			}
 		}
+		
+		if cacheHas(getManifestURL(image, tag["name"].(string))) {
+			tag["manifest"] = getManifestInfo(image, tag["name"].(string))
+		} else {
+			tag["manifest_url"] = "./manifest?i=" + url.QueryEscape(image + "/" + tag["name"].(string))
+		}
 	}
 	
 	return tags
+}
+
+func addTagAndManifestInfo(repo *Repository) {
+	if img := repo.Namespace + "/" + repo.Name; cacheHas(getTagURL(img, 1)) {
+		repo.Tags = getTags(img)
+	} else {
+		repo.Tags_url = "./tags?i=" + url.QueryEscape(img)
+	}
 }

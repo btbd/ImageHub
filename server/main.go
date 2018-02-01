@@ -15,7 +15,7 @@ import (
 var log_mu sync.Mutex
 var verbose = 1
 var web_path = "web"
-var log_path = "./"
+var log_path = "."
 
 var https = &http.Client{Transport: &http.Transport{
 	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -25,6 +25,7 @@ func debug(v int, format string, args ...interface{}) {
 	if v > verbose {
 		return
 	}
+	
 	fmt.Printf(format, args...)
 }
 
@@ -63,12 +64,12 @@ func main() {
 		}
 	}
 
+	flag.IntVar(&verbose, "v", verbose, "verbose/debug level")
 	flag.IntVar(&expire, "expire", expire, "time (mins) items live in the cache")
+	flag.IntVar(&port, "port", port, "port number for the server to listen on")
 	flag.StringVar(&cache_path, "cache-path", cache_path, "dir path for the cache")
 	flag.StringVar(&log_path, "log-path", log_path, "path for the log file")
-	flag.IntVar(&port, "port", port, "port number for the server to listen on")
-	flag.IntVar(&verbose, "v", verbose, "verbose/debug level")
-	flag.StringVar(&web_path, "web", web_path, "web dir")
+	flag.StringVar(&web_path, "web-path", web_path, "path for the client-side web dir")
 	flag.Parse()
 
 	if len(cache_path) == 0 {
@@ -120,7 +121,7 @@ func main() {
 	http.HandleFunc("/search", handleSearchRequest)
 	
 	// Handles architecture requests
-	http.HandleFunc("/arch", handleArchRequest)
+	http.HandleFunc("/manifest", handleManifestRequest)
 	
 	// Handles tag requests
 	http.HandleFunc("/tags", handleTagsRequest)

@@ -30,14 +30,15 @@
 			}
 
 			td, th {
+				padding: 0;
 				text-align: left;
 				overflow: hidden;
 				white-space: nowrap;
 				vertical-align: top;
-				padding: 0px;
-			}
+			} 
 			
 			th {
+				font-size: 12px;
 				background-color: #c4cdda;
 				-webkit-user-select: none;
 				-moz-user-select: none;
@@ -49,46 +50,11 @@
 				background-color: #e3e3e3;
 			}
 			
-			tr td:first-child { padding-left: 3px; width: 8.33%; }
-			tr th:first-child { padding-left: 3px; width: 8.33%; }
-			
-			tr td:nth-child(2) { width: 16.66%; }
-			tr th:nth-child(2) { width: 16.66%; }
-			
-			tr td:nth-child(3) { width: 4.63%; text-align: center; }
-			tr th:nth-child(3) { width: 4.63%; text-align: center; }
-			
-			tr td:nth-child(4) { width: 4.63%; text-align: center; }
-			tr th:nth-child(4) { width: 4.63%; text-align: center; }
-			
-			tr td:nth-child(5) { width: 4.63%; text-align: center; }
-			tr th:nth-child(5) { width: 4.63%; text-align: center; }
-			
-			tr td:nth-child(6) { width: 4.63%; text-align: center; }
-			tr th:nth-child(6) { width: 4.63%; text-align: center; }
-			
-			tr td:nth-child(7) { width: 4.63%; text-align: center; }
-			tr th:nth-child(7) { width: 4.63%; text-align: center; }
-			
-			tr td:nth-child(8) { width: 4.63%; text-align: center; }
-			tr th:nth-child(8) { width: 4.63%; text-align: center; }
-			
-			tr td:nth-child(9) { width: 4.63%; }
-			tr th:nth-child(9) { width: 4.63%; }
-			
-			tr td:nth-child(10) { width: 4.63%; text-align: center; }
-			tr th:nth-child(10) { width: 4.63%; text-align: center; }
-			
-			tr td:nth-child(11) { width: 4.63%; }
-			tr th:nth-child(11) { width: 4.63%; }
-			
-			tr td:nth-child(12) { width: 8.33%; }
-			tr th:nth-child(12) { width: 8.33%; }
-			
-			tr td:nth-child(13) { width: 24.99%; }
-			tr th:nth-child(13) { width: 24.99%; }
+			tr td:first-child { padding-left: 3px; }
+			tr th:first-child { padding-left: 3px; }
 
 			.arrow-up {
+				margin-left: 5px;
 				z-index: 100;
 				display: inline-block;
 				width: 0; 
@@ -96,10 +62,11 @@
 				border-left: 7px solid transparent;
 				border-right: 7px solid transparent;
 				border-bottom: 7px solid black;
-				position: absolute;
+				position: relative;
 			}
 
 			.arrow-down {
+				margin-left: 5px;
 				z-index: 100;
 				display: inline-block;
 				width: 0; 
@@ -107,11 +74,7 @@
 				border-left: 7px solid transparent;
 				border-right: 7px solid transparent;
 				border-top: 7px solid black;
-				position: absolute;
-			}
-
-			th .arrow-up, th .arrow-down {
-				visibility: hidden;
+				position: relative;
 			}
 			
 			#table_holder_margin {
@@ -164,16 +127,34 @@
 				cursor: hand;
 			}
 			
-			.tag-row-even {
+			#description {
+				position: fixed;
+				background-color: white;
+				color: black;
+			}
+			
+			tr td:not(:first-child) div > div:nth-child(odd) {
 				background-color: #ccdde2;
 			}
 			
-			.tag-row-odd {
-				
-			}
+			tr td:last-child { padding-left: 2px; }
+			tr th:last-child { padding-left: 2px; }
 		</style>
 		<title>ImageHub</title>
 		<meta charset="utf-8">
+		<style>
+			tr td:nth-child(3) { width: 17.5%; }
+			tr th:nth-child(3) { width: 17.5%; }
+			
+			tr td:nth-child(4) { width: 17.5%; text-align: center; }
+			tr th:nth-child(4) { width: 17.5%; text-align: center; }
+			
+			tr td:nth-child(5) { width: 17.5%; }
+			tr th:nth-child(5) { width: 17.5%; }
+			
+			tr td:nth-child(6) { width: 17.5%; }
+			tr th:nth-child(6) { width: 17.5%; }
+		</style>
 	</head>
 	<body>
 		<div id="options">
@@ -208,18 +189,12 @@
 			<div id="table_holder_margin">
 				<table style="width: 100%;" id="headers">
 					<tr>
-						<th><div id="label_namespace" style="display: inline;">Namespace </div><div class="arrow-up" id="namespace_up"></div><div class="arrow-down" id="namespace_down"></div></th>
-						<th><div id="label_repository" style="display: inline;">Repository </div><div class="arrow-up" id="repository_up"></div><div class="arrow-down" id="repository_down"></div></th>
-						<th><div id="label_amd64" style="display: inline;">AMD </div><div class="arrow-up" id="amd64_up"></div><div class="arrow-down" id="amd64_down"></div></th>
-						<th><div id="label_arm" style="display: inline;">ARM </div><div class="arrow-up" id="arm_up"></div><div class="arrow-down" id="arm_down"></div></th>
-						<th><div id="label_arm64" style="display: inline;">ARM64 </div><div class="arrow-up" id="arm64_up"></div><div class="arrow-down" id="arm64_down"></div></th>
-						<th><div id="label_386" style="display: inline;">386 </div><div class="arrow-up" id="386_up"></div><div class="arrow-down" id="386_down"></div></th>
-						<th><div id="label_ppc64le" style="display: inline;">PPC </div><div class="arrow-up" id="ppc64le_up"></div><div class="arrow-down" id="ppc64le_down"></div></th>
-						<th><div id="label_s390x" style="display: inline;">Z </div><div class="arrow-up" id="s390x_up"></div><div class="arrow-down" id="s390x_down"></div></th>
-						<th><div id="label_type" style="display: inline;">Type </div><div class="arrow-up" id="type_up"></div><div class="arrow-down" id="type_down"></div></th>
-						<th><div id="label_automated" style="display: inline;">Auto </div><div class="arrow-up" id="automated_up"></div><div class="arrow-down" id="automated_down"></div></th>
-						<th><div id="label_stars" style="display: inline;">Stars </div><div class="arrow-up" id="stars_up"></div><div class="arrow-down" id="stars_down"></div></th>
-						<th><div id="label_pulls" style="display: inline;">Pulls </div><div class="arrow-up" id="pulls_up"></div><div class="arrow-down" id="pulls_down"></div></th>
+						<th>Namespace</th>
+						<th>Repository</th>
+						<th>Type</th>
+						<th>Auto</th>
+						<th>Stars</th>
+						<th>Pulls</th>
 						<th>Description</th>
 					</tr>
 				</table>

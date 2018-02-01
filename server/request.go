@@ -13,29 +13,20 @@ import (
 )
 
 // Used to handle data retrieved about a namespace repo from dockerhub
-type NamespaceRepository struct {
-	Name         string `json:"name"`
-	Namespace    string `json:"namespace"`
-	Type         string `json:"type"`
-	Status       int    `json:"status"`
-	Description  string `json:"description"`
-	Is_automated bool   `json:"is_automated"`
-	Is_private   bool   `json:"is_private"`
-	Is_official  bool   `json:"is_official"`
-	Star_count   int    `json:"star_count"`
-	Pull_count   int    `json:"pull_count"`
-	Last_updated string `json:"last_updated"`
-}
-
-// Used to handle search data retrieved about a repo from dockerhub
-type QueryRepository struct {
-	Name         string `json:"name"`
-	Namespace    string `json:"namespace"`
-	Description  string `json:"description"`
-	Is_automated bool   `json:"is_automated"`
-	Is_official  bool   `json:"is_official"`
-	Star_count   int    `json:"star_count"`
-	Pull_count   int    `json:"pull_count"`
+type Repository struct {
+	Name          string        `json:"name"`
+	Namespace     string        `json:"namespace"`
+	Type          string        `json:"type"`
+	Status        int           `json:"status"`
+	Description   string        `json:"description"`
+	Is_automated  bool          `json:"is_automated"`
+	Is_private    bool          `json:"is_private"`
+	Is_official   bool          `json:"is_official"`
+	Star_count    int           `json:"star_count"`
+	Pull_count    int           `json:"pull_count"`
+	Last_updated  string        `json:"last_updated"`
+	Tags          []interface{} `json:"tags"`
+	Tags_url      string        `json:"tags_url"`
 }
 
 func handleFileRequest(w http.ResponseWriter, r *http.Request) {
@@ -97,7 +88,7 @@ func handleSearchRequest(w http.ResponseWriter, r *http.Request) {
 
 	// Namespace search
 	if len(namespace) != 0 {
-		var repos []NamespaceRepository
+		var repos []Repository
 		start := page * page_size
 		end := start + page_size
 		is_official := namespace == "library"
@@ -116,7 +107,80 @@ func handleSearchRequest(w http.ResponseWriter, r *http.Request) {
 
 					for i := 1; i <= count; i++ {
 						wait.Add(1)
-						go getNamespaceRepos(&wait, "https://hub.docker.com/v2/repositories/"+namespace+"?page_size=50&page="+strconv.Itoa(i), &repos, &repos_mu, query, automated, is_official)
+						go (func(wait *sync.WaitGroup, url string, repos *[]Repository, repos_mu *sync.Mutex, query string, automated int, is_official bool) {
+							bytes := cacheGetURL(url)
+							var add_repos []Repository
+							
+							if len(bytes) > 0 {
+								var data map[string]interface{}
+								err := json.Unmarshal(bytes, &data)
+								if err == nil && !(data["detail"] != nil && data["detail"].(string) == "Not found") {
+									results := data["results"].([]interface{})
+									for e := 0; e < len(results); e++ {
+										var repo Repository
+										result := results[e].(map[string]interface{})
+
+										if r := result["name"]; r != nil {
+											repo.Name = r.(string)
+										}
+
+										if r := result["description"]; r != nil {
+											repo.Description = r.(string)
+										}
+
+										if len(query) > 0 && !(strings.Contains(strings.ToLower(repo.Name), query) || strings.Contains(strings.ToLower(repo.Description), query)) {
+											continue
+										}
+
+										if r := result["is_automated"]; r != nil {
+											repo.Is_automated = r.(bool)
+										}
+
+										if (automated == 0 && repo.Is_automated) || (automated == 1 && !repo.Is_automated) {
+											continue
+										}
+
+										if r := result["is_private"]; r != nil {
+											repo.Is_private = r.(bool)
+										}
+
+										if r := result["namespace"]; r != nil {
+											repo.Namespace = r.(string)
+										}
+
+										if r := result["repository_type"]; r != nil {
+											repo.Type = r.(string)
+										}
+
+										if r := result["status"]; r != nil {
+											repo.Status = int(r.(float64))
+										}
+
+										if r := result["star_count"]; r != nil {
+											repo.Star_count = int(r.(float64))
+										}
+
+										if r := result["pull_count"]; r != nil {
+											repo.Pull_count = int(r.(float64))
+										}
+
+										if r := result["last_updated"]; r != nil {
+											repo.Last_updated = r.(string)
+										}
+
+										addTagAndManifestInfo(&repo)
+										add_repos = append(add_repos, repo)
+									}
+								} else {
+									debug(1, "  Bad request: %s\n", string(bytes))
+								}
+							}
+							
+							repos_mu.Lock()
+							*repos = append(*repos, add_repos...)
+							repos_mu.Unlock()
+							wait.Done()
+						})(&wait, "https://hub.docker.com/v2/repositories/"+namespace+"?page_size=50&page="+strconv.Itoa(i), &repos, &repos_mu, query, automated, is_official)
 					}
 						
 					wait.Wait()
@@ -169,7 +233,7 @@ func handleSearchRequest(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(response + "}\n"))
 	// Query search
 	} else if len(query) != 0 {
-		var repos []QueryRepository
+		var repos []Repository
 		start := page * page_size
 		offset := int(start % 100)
 		count := 0
@@ -219,47 +283,42 @@ func handleSearchRequest(w http.ResponseWriter, r *http.Request) {
 								break query_loop
 							}
 
+							var repo Repository
 							result := results[e].(map[string]interface{})
 
-							name := ""
 							if r := result["repo_name"]; r != nil {
-								name = r.(string)
+								repo.Name = r.(string)
 							}
 
-							namespace := ""
-							if s := strings.Index(name, "/"); s > -1 {
-								namespace = name[0:s]
-								name = name[s+1:]
+							if s := strings.Index(repo.Name, "/"); s > -1 {
+								repo.Namespace = repo.Name[0:s]
+								repo.Name = repo.Name[s+1:]
 							} else {
-								namespace = "library"
+								repo.Namespace = "library"
 							}
 
-							description := ""
 							if r := result["short_description"]; r != nil {
-								description = r.(string)
+								repo.Description = r.(string)
 							}
 
-							is_automated := false
 							if r := result["is_automated"]; r != nil {
-								is_automated = r.(bool)
+								repo.Is_automated = r.(bool)
 							}
 
-							is_official := false
 							if r := result["is_official"]; r != nil {
-								is_official = r.(bool)
+								repo.Is_official = r.(bool)
 							}
 
-							star_count := 0
 							if r := result["star_count"]; r != nil {
-								star_count = int(r.(float64))
+								repo.Star_count = int(r.(float64))
 							}
 
-							pull_count := 0
 							if r := result["pull_count"]; r != nil {
-								pull_count = int(r.(float64))
+								repo.Pull_count = int(r.(float64))
 							}
 
-							repos = append(repos, QueryRepository{name, namespace, description, is_automated, is_official, star_count, pull_count})
+							addTagAndManifestInfo(&repo)
+							repos = append(repos, repo)
 						}
 					} else {
 						break
@@ -284,7 +343,7 @@ func handleSearchRequest(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleArchRequest(w http.ResponseWriter, r *http.Request) {
+func handleManifestRequest(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	addLog(r)
 		
@@ -293,11 +352,31 @@ func handleArchRequest(w http.ResponseWriter, r *http.Request) {
 	i := r.FormValue("i")
 	if len(i) > 0 {
 		images := strings.Split(i, ",")
-		results := make(map[string]ArchInfo)
+		results := make(map[string][]Manifest)
+		
+		var results_mu sync.Mutex
+		var wait sync.WaitGroup
 		
 		for e := 0; e < len(images); e++ {
-			results[images[e]] = getArchInfo(images[e])
+			if len(images[e]) > 0 && strings.Index(images[e], "/") != -1 {
+				wait.Add(1)
+				
+				go (func(e string) {
+					split := strings.LastIndex(e, "/")
+					info := getManifestInfo(e[0:split], e[split + 1:len(e)])
+				
+					if info != nil {
+						results_mu.Lock()
+						results[e] = info
+						results_mu.Unlock()
+					}
+					
+					wait.Done()
+				})(images[e])
+			}
 		}
+		
+		wait.Wait()
 			
 		resp, err := json.Marshal(results)
 		if err != nil {
@@ -331,7 +410,7 @@ func handleTagsRequest(w http.ResponseWriter, r *http.Request) {
 			
 			go (func(e string) {
 				results_mu.Lock()
-				results[e] = getTags(e, 1)
+				results[e] = getTags(e)
 				results_mu.Unlock()
 				wait.Done()
 			})(images[e])
