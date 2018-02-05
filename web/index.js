@@ -250,7 +250,7 @@
 							}
 						}
 						
-						if (!found) tds[i].innerText = "";
+						if (!found) tds[i].innerText = "\n";
 					}
 				}
 			}
@@ -331,7 +331,7 @@
 			}
 		} else {
 			for (var r = row.cells, i = 2, l = headerIndex("Type"); i < l; ++i) {
-				if (r[i].innerText.trim() === "") r[i].innerText = "n";
+				if (r[i].innerText === "") r[i].innerText = "n";
 			}
 		}
 	}
