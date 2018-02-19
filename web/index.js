@@ -351,15 +351,17 @@
 					cell.innerHTML = "y" + cell.innerHTML.slice(1);
 					cell = cell.children[0];
 					
-					var index = -1;
-					for (var c = row.cells[1].children[1].children, e = 0; e < c.length; ++e) {
-						if (c[e].innerText === name.slice(name.lastIndexOf("/") + 1)) {
-							index = e;
-							break;
+					if (cell) {
+						var index = -1;
+						for (var c = row.cells[1].children[1].children, e = 0; e < c.length; ++e) {
+							if (c[e].innerText === name.slice(name.lastIndexOf("/") + 1)) {
+								index = e;
+								break;
+							}
 						}
-					}
 
-					cell.children[index].innerText = "y";
+						cell.children[index].innerText = "y";
+					}
 				}
 			}
 		}
