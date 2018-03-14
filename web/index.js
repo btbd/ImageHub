@@ -8,6 +8,7 @@
 	var search_id       = 0;
 	var search_total    = 0;
 	var search_done     = 0;
+	var tag_count       = 0;
 	
 	var tags_query      = [];
 	var manifest_query  = [];
@@ -160,6 +161,8 @@
 			
 			var e_tags = document.createElement("div");
 			e_tags.setAttribute("style", "display: none;");
+			
+			tag_count += tags.length;
 			
 			for (var i = 0; i < tags.length; ++i) {
 				var e_tag = document.createElement("div");
@@ -337,6 +340,7 @@
 	}
 	
 	function addManifestInfo(id, name, manifests) {
+		--tag_count;
 		var row = document.getElementById(name.slice(0, name.lastIndexOf("/")));
 
 		if (manifests) {
@@ -368,13 +372,33 @@
 	}
 	
 	function finishSearch() {
-		e_results_count.innerHTML = "Results: " + e_results.rows.length;
-		e_progress.innerHTML = "Progress: 100%";
-		$(e_progress).fadeOut("slow");
 		$(e_results).attr("style", "");
 		$(e_results).css("width", "100%");
 		
-		beginQuery(search_id, tags_query, "./tags?i=", addTagInfo, function(id) { beginQuery(id, manifest_query, "./manifest?i=", addManifestInfo, function() { $("body").removeClass("wait"); }); });
+		search_total = e_results.rows.length;
+		search_done = 0;
+		e_progress.innerHTML = "Tag Progress: 0%";
+		e_results_count.innerHTML = "Results: " + search_total;
+		
+		beginQuery(search_id, tags_query, "./tags?i=", function(a0, a1, a2) { 
+			$(e_progress).attr("style", "");
+			e_progress.innerHTML = "Tag Progress: " + Math.round((++search_done / search_total) * 100) + "%";
+			addTagInfo(a0, a1, a2);
+		}, function(id) { 
+			search_total = tag_count;
+			search_done = 0;
+			e_progress.innerHTML = "Manifest Progress: 0%";
+		
+			beginQuery(id, manifest_query, "./manifest?i=", function(a0, a1, a2) {
+				$(e_progress).attr("style", "");
+				e_progress.innerHTML = "Manifest Progress: " + Math.round((++search_done / search_total) * 100) + "%";
+				addManifestInfo(a0, a1, a2);
+			}, function() { 
+				e_progress.innerHTML = "Finished";
+				$(e_progress).fadeOut("slow");
+				$("body").removeClass("wait");
+			});
+		});
 	}
 	
 	function resetSearch() {
