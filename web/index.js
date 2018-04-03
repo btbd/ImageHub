@@ -84,9 +84,7 @@
 					row.insertCell(c++).innerHTML = results[i].star_count.toString();
 					row.insertCell(c++).innerHTML = results[i].pull_count.toString();
 					
-					results[i].description = results[i].description.replaceAll("&", "&amp;");
-					results[i].description = results[i].description.replaceAll("<", "&lt;");
-					results[i].description = results[i].description.replaceAll(">", "&gt;");
+					results[i].description = results[i].description.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 					row.insertCell(c).innerHTML = results[i].description;
 					
 					$(row.cells[c]).css({ "text-overflow": "ellipsis" });
