@@ -83,7 +83,12 @@
 					row.insertCell(c++).innerHTML = results[i].is_automated ? "y" : "n";
 					row.insertCell(c++).innerHTML = results[i].star_count.toString();
 					row.insertCell(c++).innerHTML = results[i].pull_count.toString();
+					
+					results[i].description = results[i].description.replaceAll("&", "&amp;");
+					results[i].description = results[i].description.replaceAll("<", "&lt;");
+					results[i].description = results[i].description.replaceAll(">", "&gt;");
 					row.insertCell(c).innerHTML = results[i].description;
+					
 					$(row.cells[c]).css({ "text-overflow": "ellipsis" });
 					addCellHover(row.cells[c], true);
 					
@@ -709,4 +714,8 @@
 			search();
 		}
 	}
+	
+	String.prototype.replaceAll = function(search, replacement) {
+		return this.replace(new RegExp(search, 'g'), replacement);
+	};
 })(document);
