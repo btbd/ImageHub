@@ -1,5 +1,6 @@
 FROM golang:1.9 as builder
-COPY server/* src/
+COPY main.go src/
+COPY dockerhub/* src/dockerhub/
 RUN GO_EXTLINK_ENABLED=0 CGO_ENABLED=0 go build \
 	-ldflags "-w -extldflags -static" \
 	-tags netgo -installsuffix netgo \
