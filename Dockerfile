@@ -6,7 +6,8 @@ RUN GO_EXTLINK_ENABLED=0 CGO_ENABLED=0 go build \
 	-tags netgo -installsuffix netgo \
 	-o /server ./src
 
-FROM scratch
+FROM alpine
+RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 COPY --from=builder /server /server
 COPY web/* web/
 ENTRYPOINT [ "/server" ]
