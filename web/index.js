@@ -2,6 +2,8 @@ var PRE_HEADERS  = [ "Namespace", "Repo" ];
 var POST_HEADERS = [ "Stars", "Pulls", "Description" ];
 
 document.addEventListener("DOMContentLoaded", function() {
+var active_requests = [];
+	
 var el_headers   = document.getElementById("results_head");
 var el_results   = document.getElementById("results");
 var el_query     = document.getElementById("query");
@@ -56,11 +58,8 @@ function OE(name, value) {
 function Search() {
 	StartLoad();
 	
-	if (window.stop) {
-		window.stop();
-	} else {
-		document.execCommand("Stop");
-	}
+	for (var i = 0; i < active_requests.length; ++i) active_requests[i].abort();
+	active_requests = [];
 	
 	el_filters.classList.remove("visible");
 	el_results.innerHTML = "";
@@ -433,6 +432,7 @@ function HttpGet(url, callback) {
 		}
 	};
 	x.open("GET", url, true);
+	active_requests.push(x);
 	x.send(null);
 }
 
