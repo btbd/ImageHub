@@ -1,339 +1,376 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<link rel="icon" href="favicon.ico">
-		<title>ImageHub</title>
-		<meta charset="utf-8">
-		<style>
-			body.wait *{
-				cursor: wait !important;
+
+<head>
+	<link rel="icon" href="favicon.ico">
+	<title>ImageHub</title>
+	<meta charset="utf-8">
+	<style>
+		body.wait * {
+			cursor: wait !important;
+		}
+
+		.no_select,
+		th {
+			user-select: none;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+		}
+
+
+		@media only screen and (max-width: 820px) {
+			#namespace {
+				width: 12.19512195vw !important;
 			}
-			
-			.no_select, th {
-				user-select: none;
-				-webkit-touch-callout: none;
-				-webkit-user-select: none;
-				-khtml-user-select: none;
-				-moz-user-select: none;
-				-ms-user-select: none;
+
+			#query {
+				width: 12.19512195vw !important;
 			}
-			
-			
-			@media only screen and (max-width: 820px) {
-				#namespace {
-					width: 12.19512195vw !important;
-				}
-				
-				#query {
-					width: 12.19512195vw !important;
-				}
-				
-				#filters_button {
-					width: 16.46341463vw !important;
-				}
-			}
-			
-			html, body {
-				width: 100%;
-				height: 100%;
-				margin: 0;
-				overflow: hidden;
-				background-color: #edf6ff;
-			}
-			
-			#outer {
-				display: flex;
-				flex-flow: column;
-				width: 100%;
-				height: 100%;
-			}
-			
-			#options {
-				min-width: 820px;
-				background-color: #008bbf;
-				top: 0;
-				left: 0;
-				width: 100%;
-				color: white;
-				padding: 5px;
-			}
-			
-			#official {
-				vertical-align: middle;
-				padding: 0;
-				margin: 0;
-				margin-right: 15px;
-			}
-			
-			#namespace, #query {
-				width: 100px;
-			}
-			
-			#search {
-				margin-left: 15px;
-			}
-			
-			label {
-				margin-right: 5px;
-			}
-			
-			#results_outer {
-				width: 100%;
-				height: calc(100% - 20px);
-				flex-grow: 1;
-			}
-			
-			#results, #results_head {
-				border-collapse: collapse;
-				table-layout: fixed;
-				padding: 0;
-				background-color: #c4cdda;
-			}
-			
-			#results_head {
-				width: calc(100% - 17px);
-			}
-			
-			#results_head_outer {
-				width: calc(100vw - 20px);
-				height: 15px;
-				margin-top: 5px;
-				margin-left: 10px;
-				margin-right: 10px;
-				border: 2px solid #c4cdda;
-				display: flex;
-			}
-			
-			#results_head_cover {
-				width: 17px;
-				background-color: #c4cdda;
-			}
-			
-			#results_inner {
-				display: block;
-				overflow-y: scroll;
-				margin-left: 10px;
-				margin-right: 10px;
-				width: calc(100% - 20px);
-				border: 2px solid #c4cdda;
-				height: calc(100vh - 90px);
-			}
-			
-			#results {
-				width: 100%;
-			}
-			
-			#results_count {
-				display: inline-block;
-				margin-right: 20px;
-				float: right;
-			}
-			
-			#page_outer {
-				width: 100%;
-				margin-bottom: 5px;
-				text-align: center;
-			}
-			
-			#page {
-				width: 25px;
-			}
-			
-			#page_count {
-				display: inline-block;
-			}
-			
-			#back, #next {
-				display: inline-block;
-			}
-			
-			#back, #next:hover {
-				cursor: pointer;
-			}
-			
-			#back {
-				margin-right: 25px;
-			}
-			
-			#next {
-				margin-left: 25px;
-			}
-			
-			td, th {
-				text-align: left;
-				vertical-align: top;
-				padding: 0;
-				white-space: nowrap;
-				overflow: hidden;
-				background-color: inherit;
-			}
-			
-			tr td:first-child { padding-left: 5px; }
-			tr th:first-child { padding-left: 5px; }
-		
-			tr td:nth-last-child(1) { width: 17.5%; text-overflow: ellipsis; }
-			tr th:nth-last-child(1) { width: 17.5%; }
-			tr td:nth-last-child(2) { text-align: center; }
-			tr th:nth-last-child(2) { text-align: center; }
-			tr td:nth-last-child(3) { text-align: center; }
-			tr th:nth-last-child(3) { text-align: center; }
-			
-			#results tr:nth-child(even) {
-				background-color: #e3e3e3;
-			}
-			
-			#results tr:nth-child(odd) {
-				background-color: #edf6ff;
-			}
-			
-			.y {
-				color: green;
-			}
-			
-			.n { 
-				color: red;
-			}
-			
-			#filters_outer {
-				display: inline-block;
-			}
-			
+
 			#filters_button {
-				width: 135px;
+				width: 16.46341463vw !important;
 			}
-			
-			#filters {
-				display: none;
-				width: 135px;
-				background-color: #005baf;
-				position: absolute;
-				list-style: none;
-				margin: 0;
-				padding: 0;
-				padding-bottom: 2px;
-				margin-top: -2px;
-				border-bottom-left-radius: 5px;
-				border-bottom-right-radius: 5px;
-			}
-			
-			#filters.visible {
-				display: initial !important;
-			}
-			
-			.os_td {
-				width: 7%;
-				text-align: center; 
-			}
-			
-			.arch_td {
-				width: 6%;
-				text-align: center;
-			}
-			
-			.twisty {
-				position: relative;
-				background-color: inherit;
-				height: 100%;
-				padding-right: 5px;
-				padding-left: 5px;
-				display: inline-block;
-				float: right;
-				z-index: 1;
-			}
-			
-			.twisty:hover {
-				cursor: pointer;
-			}
-			
-			.tag_row_even {
-				background-color: #ccdde2;
-			}
-			
-			.arrow_up {
-				margin-left: 2px;
-				z-index: 100;
-				display: inline-block;
-				width: 0;
-				height: 0;
-				border-left: 7px solid transparent;
-				border-right: 7px solid transparent;
-				border-bottom: 7px solid black;
-			}
-			
-			.arrow_down {
-				margin-left: 2px;
-				z-index: 100;
-				display: inline-block;
-				width: 0;
-				height: 0;
-				border-left: 7px solid transparent;
-				border-right: 7px solid transparent;
-				border-top: 7px solid black;
-			}
-			
-			#popup {
-				z-index: 10;
-				display: none;
-				position: fixed;
-				background-color: white;
-				padding: 5px 5px 5px 5px;
-				box-shadow: 0px 0px 10px #000000;
-			}
-			
-			#github_outer {
-				position: absolute;
-				right: 10px;
-				display:inline-block;
-			}
-		</style>
-	</head>
-	<body>
-		<div id="outer">
-			<div id="options">
-				<label for="namespace">Namespace</label><input id="namespace" tabindex="1"></input>
-				<label for="official">Official</label><input id="official" type="checkbox" title="Official" tabindex="2"></input>
-				<label for="query">Query</label><input id="query" tabindex="3"></input>
-				<div id="filters_outer">
-					<button id="filters_button" tabindex="4">Filters</button>
-					<br>
-					<ul id="filters">
-						<li><input type="checkbox" class="filter" value="os:linux">Linux</li>
-						<li><input type="checkbox" class="filter" value="os:windows">Windows</li>
-						<li><input type="checkbox" class="filter" value="arch:arm">ARM</li>
-						<li><input type="checkbox" class="filter" value="arch:arm64">ARM64</li>
-						<li><input type="checkbox" class="filter" value="arch:ppc">PowerPC</li>
-						<li><input type="checkbox" class="filter" value="arch:s390x">IBM Z (S390x)</li>
-						<li><input type="checkbox" class="filter" value="arch:ppc64le">PowerPC 64LE</li>
-						<li><input type="checkbox" class="filter" value="arch:386">x86 (386)</li>
-						<li><input type="checkbox" class="filter" value="arch:amd64">x86-64 (AMD64)</li>
-					</ul>
-				</div>
-				<button id="search" tabindex="5">Search</button>
-				<div id="results_count">Results: 0</div>
+		}
+
+		html,
+		body {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+			overflow: hidden;
+			background-color: #edf6ff;
+		}
+
+		#outer {
+			display: flex;
+			flex-flow: column;
+			width: 100%;
+			height: 100%;
+		}
+
+		#options {
+			min-width: 820px;
+			background-color: #008bbf;
+			top: 0;
+			left: 0;
+			width: 100%;
+			color: white;
+			padding: 5px;
+		}
+
+		#official {
+			vertical-align: middle;
+			padding: 0;
+			margin: 0;
+			margin-right: 15px;
+		}
+
+		#namespace,
+		#query {
+			width: 100px;
+		}
+
+		#search {
+			margin-left: 15px;
+		}
+
+		label {
+			margin-right: 5px;
+		}
+
+		#results_outer {
+			width: 100%;
+			height: calc(100% - 20px);
+			flex-grow: 1;
+		}
+
+		#results,
+		#results_head {
+			border-collapse: collapse;
+			table-layout: fixed;
+			padding: 0;
+			background-color: #c4cdda;
+		}
+
+		#results_head {
+			width: calc(100% - 17px);
+		}
+
+		#results_head_outer {
+			width: calc(100vw - 20px);
+			height: 15px;
+			margin-top: 5px;
+			margin-left: 10px;
+			margin-right: 10px;
+			border: 2px solid #c4cdda;
+			display: flex;
+		}
+
+		#results_head_cover {
+			width: 17px;
+			background-color: #c4cdda;
+		}
+
+		#results_inner {
+			display: block;
+			overflow-y: scroll;
+			margin-left: 10px;
+			margin-right: 10px;
+			width: calc(100% - 20px);
+			border: 2px solid #c4cdda;
+			height: calc(100vh - 90px);
+		}
+
+		#results {
+			width: 100%;
+		}
+
+		#results_count {
+			display: inline-block;
+			margin-right: 20px;
+			float: right;
+		}
+
+		#page_outer {
+			width: 100%;
+			margin-bottom: 5px;
+			text-align: center;
+		}
+
+		#page {
+			width: 25px;
+		}
+
+		#page_count {
+			display: inline-block;
+		}
+
+		#back,
+		#next {
+			display: inline-block;
+		}
+
+		#back,
+		#next:hover {
+			cursor: pointer;
+		}
+
+		#back {
+			margin-right: 25px;
+		}
+
+		#next {
+			margin-left: 25px;
+		}
+
+		td,
+		th {
+			text-align: left;
+			vertical-align: top;
+			padding: 0;
+			white-space: nowrap;
+			overflow: hidden;
+			background-color: inherit;
+		}
+
+		tr td:first-child {
+			padding-left: 5px;
+		}
+
+		tr th:first-child {
+			padding-left: 5px;
+		}
+
+		tr td:nth-last-child(1) {
+			width: 17.5%;
+			text-overflow: ellipsis;
+		}
+
+		tr th:nth-last-child(1) {
+			width: 17.5%;
+		}
+
+		tr td:nth-last-child(2) {
+			text-align: center;
+		}
+
+		tr th:nth-last-child(2) {
+			text-align: center;
+		}
+
+		tr td:nth-last-child(3) {
+			text-align: center;
+		}
+
+		tr th:nth-last-child(3) {
+			text-align: center;
+		}
+
+		#results tr:nth-child(even) {
+			background-color: #e3e3e3;
+		}
+
+		#results tr:nth-child(odd) {
+			background-color: #edf6ff;
+		}
+
+		.y {
+			color: green;
+		}
+
+		.n {
+			color: red;
+		}
+
+		#filters_outer {
+			display: inline-block;
+		}
+
+		#filters_button {
+			width: 135px;
+		}
+
+		#filters {
+			display: none;
+			width: 135px;
+			background-color: #005baf;
+			position: absolute;
+			list-style: none;
+			margin: 0;
+			padding: 0;
+			padding-bottom: 2px;
+			margin-top: -2px;
+			border-bottom-left-radius: 5px;
+			border-bottom-right-radius: 5px;
+		}
+
+		#filters.visible {
+			display: initial !important;
+		}
+
+		.os_td {
+			width: 5%;
+			text-align: center;
+		}
+
+		.arch_td {
+			width: 5%;
+			text-align: center;
+		}
+
+		.twisty {
+			position: relative;
+			background-color: inherit;
+			height: 100%;
+			padding-right: 5px;
+			padding-left: 5px;
+			display: inline-block;
+			float: right;
+			z-index: 1;
+		}
+
+		.twisty:hover {
+			cursor: pointer;
+		}
+
+		.tag_row_even {
+			background-color: #ccdde2;
+		}
+
+		.arrow_up {
+			margin-left: 2px;
+			z-index: 100;
+			display: inline-block;
+			width: 0;
+			height: 0;
+			border-left: 7px solid transparent;
+			border-right: 7px solid transparent;
+			border-bottom: 7px solid black;
+		}
+
+		.arrow_down {
+			margin-left: 2px;
+			z-index: 100;
+			display: inline-block;
+			width: 0;
+			height: 0;
+			border-left: 7px solid transparent;
+			border-right: 7px solid transparent;
+			border-top: 7px solid black;
+		}
+
+		#popup {
+			z-index: 10;
+			display: none;
+			position: fixed;
+			background-color: white;
+			padding: 5px 5px 5px 5px;
+			box-shadow: 0px 0px 10px #000000;
+		}
+
+		#github_outer {
+			position: absolute;
+			right: 10px;
+			display: inline-block;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="outer">
+		<div id="options">
+			<label for="namespace">Namespace</label><input id="namespace" tabindex="1"></input>
+			<label for="official">Official</label><input id="official" type="checkbox" title="Official"
+				tabindex="2"></input>
+			<label for="query">Query</label><input id="query" tabindex="3"></input>
+			<div id="filters_outer">
+				<button id="filters_button" tabindex="4">Filters</button>
+				<br>
+				<ul id="filters">
+					<li><input type="checkbox" class="filter" value="os:linux">Linux</li>
+					<li><input type="checkbox" class="filter" value="os:windows">Windows</li>
+					<li><input type="checkbox" class="filter" value="arch:arm">ARM</li>
+					<li><input type="checkbox" class="filter" value="arch:arm64">ARM64</li>
+					<li><input type="checkbox" class="filter" value="arch:ppc">PowerPC</li>
+					<li><input type="checkbox" class="filter" value="arch:s390x">IBM Z (S390x)</li>
+					<li><input type="checkbox" class="filter" value="arch:ppc64le">PowerPC 64LE</li>
+					<li><input type="checkbox" class="filter" value="arch:386">x86 (386)</li>
+					<li><input type="checkbox" class="filter" value="arch:amd64">x86-64 (AMD64)</li>
+				</ul>
 			</div>
-			<div id="results_outer">
-				<div id="results_head_outer">
-					<table id="results_head">
-						<tr>
-							<th>Namespace</th>
-							<th>Repo</th>
-							<th>Stars</th>
-							<th>Pulls</th>
-							<th>Description</th>
-						</tr>
-					</table>
-					<div id="results_head_cover"></div>
-				</div>
-				<div id="results_inner">
-					<table id="results"></table>
-				</div>
-			</div>
-			<div id="page_outer">
-				<div id="back" class="no_select"></div>Page <input id="page" value="0"></input> of <div id="page_count">0</div><div id="next" class="no_select"></div>
-				<div id="github_outer"><a href="https://github.com/btbd/ImageHub">github<img src="logo.png" alt="Logo" width="22px" height="22px" style="vertical-align: bottom;"></a></div>
-			</div>	
+			<button id="search" tabindex="5">Search</button>
+			<div id="results_count">Results: 0</div>
 		</div>
-		<div id="popup"></div>
-	</body>
-	<script src="index.js"></script>
+		<div id="results_outer">
+			<div id="results_head_outer">
+				<table id="results_head">
+					<tr>
+						<th>Namespace</th>
+						<th>Repo</th>
+						<th>Stars</th>
+						<th>Pulls</th>
+						<th>Description</th>
+					</tr>
+				</table>
+				<div id="results_head_cover"></div>
+			</div>
+			<div id="results_inner">
+				<table id="results"></table>
+			</div>
+		</div>
+		<div id="page_outer">
+			<div id="back" class="no_select"></div>Page <input id="page" value="0"></input> of <div id="page_count">0
+			</div>
+			<div id="next" class="no_select"></div>
+			<div id="github_outer"><a href="https://github.com/btbd/ImageHub">github<img src="logo.png" alt="Logo"
+						width="22px" height="22px" style="vertical-align: bottom;"></a></div>
+		</div>
+	</div>
+	<div id="popup"></div>
+</body>
+<script src="index.js"></script>
+
 </html>

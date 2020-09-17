@@ -95,7 +95,6 @@ type Tag struct {
 	Creator  int `json:"creator,omitempty"`
 	FullSize int `json:"full_size,omitempty"`
 	Id       int `json:"id,omitempty"`
-	Image_id int `json:"image_id,omitempty"`
 	Images   []struct {
 		Architecture string `json:"architecture,omitempty"`
 		Os           string `json:"os,omitempty"`
